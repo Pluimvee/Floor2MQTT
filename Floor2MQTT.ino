@@ -130,23 +130,26 @@ void loop()
   // whats the time
   DateTime now = rtc.now();
 
-  if (update_interval.passed()) {
+  if (!update_interval.passed()) 
+    return;
 
-    INFO("[%s] - Reading temperature sensors\n", 
-              now.timestamp(DateTime::TIMESTAMP_TIME).c_str());
+  led.blink();
 
-    led.blink();
+  if (!floor_mon.loop())
+    ERROR("[%s] - %s\n", 
+          rtc.now().timestamp(DateTime::TIMESTAMP_TIME).c_str(), 
+          floor_mon.logmsg.c_str());
 
-    if (!floor_mon.loop())
-      ERROR("[%s] - %s\n", 
-            rtc.now().timestamp(DateTime::TIMESTAMP_TIME).c_str(), 
-            floor_mon.logmsg.c_str());
+  // if temp from boiler is ~2 degrees above temp of floor there is heating demand
+  float temp_diff = floor_mon.from_boiler.getCurrentValue().toFloat() - floor_mon.from_floor.getCurrentValue().toFloat();
+  // this temp offset may not work in summertime, with outside temp above 30
+  if (temp_diff > 1.5f)
+    update_interval.set(1000);
+  else
+    update_interval.set(10000);
 
-    if (floor_mon.from_boiler.getCurrentValue().toFloat() > 25.0f)
-      update_interval.set(1000);
-    else
-      update_interval.set(5000);
-  }
+  INFO("[%s] - Reading temperature sensors (Tba-Tfr:%f)\n", 
+            now.timestamp(DateTime::TIMESTAMP_TIME).c_str(), temp_diff);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
