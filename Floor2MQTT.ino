@@ -8,6 +8,9 @@
 #include "secrets.h"
 #include <DatedVersion.h>
 DATED_VERSION(0, 2)
+#define LOG_REMOTE
+#define LOG_LEVEL 2
+#include <Logging.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Configuration
@@ -28,11 +31,7 @@ Clock             rtc;                            // A real (software) time cloc
 LED               led;                            // 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// For remote logging the log include needs to be after the global MQTT definition
-#define LOG_REMOTE
-#define LOG_LEVEL 2
-#include <Logging.h>
-
+// Send log remotely to MQTT
 void LOG_CALLBACK(char *msg) { 
   LOG_REMOVE_NEWLINE(msg);
   mqtt.publish("FloorHeating/log", msg, true); 
